@@ -1,0 +1,154 @@
+-- LIBRARY MANAGEMENT SYSTEM
+
+-- create database library_management_system;
+-- 1. MEMBERS
+CREATE TABLE members (
+    member_id SERIAL PRIMARY KEY,
+    member_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    address VARCHAR(255) NOT NULL
+);
+
+-- 2. AUTHORS
+CREATE TABLE authors (
+    author_id SERIAL PRIMARY KEY,
+    author_name VARCHAR(100) NOT NULL
+);
+
+-- 3. BOOKS
+CREATE TABLE books (
+    book_id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    author_id INT NOT NULL,
+    available_copies INT NOT NULL,
+
+    FOREIGN KEY (author_id)
+    REFERENCES authors(author_id)
+);
+
+-- 4. LIBRARIANS
+CREATE TABLE librarians (
+    librarian_id SERIAL PRIMARY KEY,
+    librarian_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(15) NOT NULL
+);
+
+-- 5. BOOK ISSUES
+CREATE TABLE book_issues (
+    issue_id SERIAL PRIMARY KEY,
+    member_id INT NOT NULL,
+    book_id INT NOT NULL,
+    librarian_id INT NOT NULL,
+    issue_date DATE NOT NULL,
+    due_date DATE NOT NULL,
+    return_date DATE,
+
+    FOREIGN KEY (member_id)
+    REFERENCES members(member_id),
+
+    FOREIGN KEY (book_id)
+    REFERENCES books(book_id),
+
+    FOREIGN KEY (librarian_id)
+    REFERENCES librarians(librarian_id)
+);
+
+-- 6. PAYMENTS (FINE PAYMENTS)
+CREATE TABLE payments (
+    payment_id SERIAL PRIMARY KEY,
+    member_id INT NOT NULL,
+    issue_id INT NOT NULL,
+    amount INT NOT NULL,
+    payment_mode VARCHAR(50) NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (member_id)
+    REFERENCES members(member_id),
+
+    FOREIGN KEY (issue_id)
+    REFERENCES book_issues(issue_id)
+);
+
+-- MEMBERS
+INSERT INTO members
+(member_name, phone, email, address)
+VALUES
+('Prince Benjamin', '9876543210', 'prince@gmail.com', 'Chennai'),
+('Nishanth', '9876543211', 'nishanth@gmail.com', 'Coimbatore'),
+('Pradeep', '9876543212', 'pradeep@gmail.com', 'Salem'),
+('Puviarasu', '9876543213', 'puvi@gmail.com', 'Erode');
+
+-- AUTHORS
+INSERT INTO authors(author_name)
+VALUES
+('R.K. Narayan'),
+('Chetan Bhagat'),
+('A.P.J Abdul Kalam'),
+('James Clear');
+
+-- BOOKS
+INSERT INTO books
+(title, category, author_id, available_copies)
+VALUES
+('Malgudi Days', 'Fiction', 1, 5),
+('Five Point Someone', 'Novel', 2, 4),
+('Wings of Fire', 'Biography', 3, 6),
+('Atomic Habits', 'Self Help', 4, 8);
+
+-- LIBRARIANS
+INSERT INTO librarians
+(librarian_name, phone)
+VALUES
+('Arun Kumar', '9001111111'),
+('Vijay Kumar', '9002222222');
+
+-- BOOK ISSUES
+INSERT INTO book_issues
+(member_id, book_id, librarian_id,
+ issue_date, due_date, return_date)
+VALUES
+(1, 1, 1, '2026-06-01', '2026-06-15', '2026-06-10'),
+(2, 2, 1, '2026-06-02', '2026-06-16', NULL),
+(3, 3, 2, '2026-06-03', '2026-06-17', NULL),
+(4, 4, 2, '2026-06-04', '2026-06-18', '2026-06-12');
+
+-- PAYMENTS
+INSERT INTO payments
+(member_id, issue_id, amount,
+ payment_mode)
+VALUES
+(1, 1, 0, 'Cash'),
+(2, 2, 50, 'UPI'),
+(3, 3, 20, 'Card'),
+(4, 4, 0, 'Cash');
+
+SELECT * FROM members;
+SELECT * FROM authors;
+SELECT * FROM books;
+SELECT * FROM librarians;
+SELECT * FROM book_issues;
+SELECT * FROM payments;
+
+SELECT
+    m.member_name,
+    b.title AS book_title,
+    a.author_name,
+    l.librarian_name,
+    bi.issue_date,
+    bi.due_date,
+    bi.return_date,
+    p.amount AS fine_amount,
+    p.payment_mode
+FROM book_issues bi
+JOIN members m
+    ON bi.member_id = m.member_id
+JOIN books b
+    ON bi.book_id = b.book_id
+JOIN authors a
+    ON b.author_id = a.author_id
+JOIN librarians l
+    ON bi.librarian_id = l.librarian_id
+JOIN payments p
+    ON bi.issue_id = p.issue_id;
